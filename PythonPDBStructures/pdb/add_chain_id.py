@@ -8,8 +8,8 @@
 """Add chain ID
 """
 
-import PythonAuxiliaryFunctions.FilesIO.ReadFile as ReadFile
-import PythonAuxiliaryFunctions.FilesIO.WriteFile as WriteFile
+import PythonAuxiliaryFunctions.files_IO.read_file as read_file
+import PythonAuxiliaryFunctions.files_IO.write_file as write_file
 
 
 def add_chain_id_pdb(pdb_file, chain='A'):
@@ -28,7 +28,7 @@ def add_chain_id_pdb(pdb_file, chain='A'):
 
     chain = chain.upper().strip()
 
-    lines = ReadFile.read_file(file_name=pdb_file)
+    lines = read_file.read_file(file_name=pdb_file)
 
     for i in range(len(lines)):
 
@@ -39,4 +39,4 @@ def add_chain_id_pdb(pdb_file, chain='A'):
 
             lines[i] = lines[i].strip('\n') + '\n'
 
-    WriteFile.write_file(lines=lines, file_name=pdb_file)
+    write_file.write_file(lines=lines, file_name=pdb_file)

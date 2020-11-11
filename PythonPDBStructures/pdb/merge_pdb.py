@@ -10,7 +10,7 @@ This file contains the functions to merge PDB or mmCIF
 They are useful wen you need to merge one or more organic ligands with a protein
 """
 
-from PythonAuxiliaryFunctions.FilesIO import ReadFile, WriteFile
+from PythonAuxiliaryFunctions.files_IO import read_file, write_file
 
 
 def merge_pdb(input_pdb_1, input_pdb_2, output_pdb):
@@ -29,7 +29,7 @@ def merge_pdb(input_pdb_1, input_pdb_2, output_pdb):
         can also be one of the input ones
     """
 
-    lines_1 = ReadFile.read_file(input_pdb_1)
+    lines_1 = read_file.read_file(input_pdb_1)
 
     #get the index of the line with the last ATOM HETATM or TER line
     #and get the resnum of this last residue
@@ -53,7 +53,7 @@ def merge_pdb(input_pdb_1, input_pdb_2, output_pdb):
 
             break
 
-    lines_2 = ReadFile.read_file(input_pdb_2)
+    lines_2 = read_file.read_file(input_pdb_2)
     #find first coordinate line in input_pdb_2
     for i in range(len(lines_2)):
 
@@ -84,4 +84,4 @@ def merge_pdb(input_pdb_1, input_pdb_2, output_pdb):
     #insert the ligands in the right place of the protein_file list
     lines_1[index_protein_file:index_protein_file] = lines_2
 
-    WriteFile.write_file(lines=lines_1, file_name=output_pdb)
+    write_file.write_file(lines=lines_1, file_name=output_pdb)

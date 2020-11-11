@@ -13,7 +13,7 @@ mass COM of a protein structure
 
 import Bio.PDB
 
-import PythonPDBStructures.ImportantLists
+import PythonPDBStructures.important_lists
 
 
 def get_center_of_mass(structure, geometric=False):
@@ -42,7 +42,7 @@ def get_center_of_mass(structure, geometric=False):
     float
     """
 
-    atom_weights = PythonPDBStructures.ImportantLists.atom_weights
+    atom_weights = PythonPDBStructures.important_lists.atom_weights
 
     # Structure, Model, Chain, Residue
     if isinstance(structure, Bio.PDB.Entity.Entity):
