@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=missing-docstring
 # pylint: disable=redefined-outer-name
+# pylint: disable=no-self-use
+# pylint: disable=protected-access
 """Tests."""
 from pathlib import Path
 

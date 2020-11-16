@@ -26,6 +26,9 @@ def add_chain_id_pdb(pdb_file, chain='A'):
         default 'A', the chain id to add to the pdb_file
     """
 
+    if len(chain) > 2:
+        raise ValueError('A chain id can be max 2 letters long!')
+
     chain = chain.upper().strip()
 
     lines = read_file.read_file(file_name=pdb_file)

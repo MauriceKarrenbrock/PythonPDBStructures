@@ -8,12 +8,12 @@
 """Functions to download the pdb and mmcif files from the wwPDB
 """
 
-import os
+from pathlib import Path
 
 import Bio.PDB
 
 
-def download(protein_id, file_type='cif', pdir=os.getcwd()):
+def download(protein_id, file_type='cif', pdir=None):
     """The function downloads a PDB or a mmCIF from wwwPDB in a selected directory
 
     the default directory is the working directory
@@ -31,13 +31,19 @@ def download(protein_id, file_type='cif', pdir=os.getcwd()):
 
     Returns
     ----------
-    file_name : str
+    file_path : pathlib.Path
+        check pathlib documentation for more info on this kind of
+        path object
 
     Raises
     ------------
     FileNotFoundError
         if the file is not downloaded correctly
     """
+
+    if pdir is None:
+
+        pdir = Path.cwd()
 
     if file_type == 'cif':
         file_type = 'mmCif'
@@ -46,14 +52,16 @@ def download(protein_id, file_type='cif', pdir=os.getcwd()):
         raise ValueError(f"Must be 'pdb' or 'cif' not {file_type}")
 
     pdbl = Bio.PDB.PDBList()
-    file_name = pdbl.retrieve_pdb_file(protein_id,
+    file_path = pdbl.retrieve_pdb_file(protein_id,
                                        False,
                                        pdir,
                                        file_format=file_type,
                                        overwrite=True)
 
-    if not os.path.exists(file_name):
-        raise FileNotFoundError(
-            f'Was not able to download the protein or to find {file_name}')
+    file_path = Path(file_path)
 
-    return file_name
+    if not file_path.exists():
+        raise FileNotFoundError(
+            f'Was not able to download the protein or to find {file_path}')
+
+    return file_path

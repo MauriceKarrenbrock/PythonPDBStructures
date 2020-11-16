@@ -39,7 +39,8 @@ def get_center_of_mass(structure, geometric=False):
 
     Returns
     ----------
-    float
+    tuple
+        (x, y, z) x, y, z are float
     """
 
     atom_weights = PythonPDBStructures.important_lists.atom_weights
@@ -60,6 +61,7 @@ def get_center_of_mass(structure, geometric=False):
     masses = []
 
     for atom in atom_list:
+
         if atom.element.capitalize() in atom_weights.keys():
             atom.mass = atom_weights[atom.element.capitalize()]
 
@@ -88,65 +90,7 @@ def get_center_of_mass(structure, geometric=False):
             w_pos[2].append(positions[2][atom_index] * atom_mass)
         com = [sum(coord_list) / sum(masses) for coord_list in w_pos]
 
+    #for safety, so you won't change the COM by accident
+    com = tuple(com)
+
     return com
-
-
-def get_atom_near_center_of_mass(structure, center_of_mass, hydrogens=False):
-    """Get serial number of atom near center of mass
-
-    Will return the serial number of the atom nearest to the center of
-    mass of the structure, if hydrogens = False the atom returned
-    atom will never be an a hydrogen
-
-    Parameters
-    -------------
-    structure : a biopython structure
-    center_of_mass : iterable
-        (x,y,z) coordinates of the center of mass
-    hydrogens : bool
-        False (default) the returned atom will never be
-        an hydrogen
-        True the returned atom can be an hydrogen
-
-    Returns
-    -----------
-    atom_serial_number : int
-
-    Notes
-    ----------
-    Some times you might need to find an atom with high connectivity
-    near the center of mass in order to keep the molecule in position
-    that's why there is the hydrogens option
-    """
-
-    #get the distance from the first atom
-    atoms = structure.get_atoms()
-    for atom in atoms:
-        min_dist = (atom.coord[0] - center_of_mass[0])**2
-        min_dist = min_dist + (atom.coord[1] - center_of_mass[1])**2
-        min_dist = min_dist + (atom.coord[2] - center_of_mass[2])**2
-        min_dist = min_dist**0.5
-
-        atom_serial_number = atom.serial_number
-
-        break
-
-    #now check for the nearest atom that is not an Hydrogen
-    H = ('H', 'h')
-    atoms = structure.get_atoms()
-    for atom in atoms:
-
-        if (atom.name.strip()[0] not in H) or hydrogens:
-
-            distance = (atom.coord[0] - center_of_mass[0])**2
-            distance = distance + (atom.coord[1] - center_of_mass[1])**2
-            distance = distance + (atom.coord[2] - center_of_mass[2])**2
-            distance = distance**0.5
-
-            if distance < min_dist:
-
-                atom_serial_number = atom.serial_number
-
-                min_dist = distance
-
-    return atom_serial_number

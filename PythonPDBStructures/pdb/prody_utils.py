@@ -63,7 +63,7 @@ def select(structure, string):
 
 
 class ProdySelect(object):
-    """This cass is a smart facade for the select function
+    """This cass is a smart facade for the `select` function
 
     Parameters
     -----------
@@ -106,14 +106,14 @@ class ProdySelect(object):
         Parameters
         ------------
         resname : str
-            residue name
+            residue name CASE SENSITIVE!
 
         Returns
         -----------
         prody.AtomGroup
         """
 
-        resname = resname.strip().upper()
+        resname = resname.strip()
 
         return select(structure=self._structure, string='resname ' + resname)
 
