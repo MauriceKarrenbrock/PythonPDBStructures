@@ -56,6 +56,16 @@ def extract_frames(delta_steps,
         `output_name`(`number_of_created_files` - 1).`output_format`
     """
 
+    #for now MDAnalysis doesn't deal well with pathlib objects
+    # issue 2497 n github https://github.com/MDAnalysis/mdanalysis/issues/2497
+    if not isinstance(topology, str):
+
+        topology = str(topology)
+
+    if not isinstance(trajectory, str):
+
+        trajectory = str(trajectory)
+
     universe = mda.Universe(topology, trajectory)
 
     outputted_file = 0
