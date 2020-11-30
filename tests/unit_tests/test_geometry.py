@@ -9,6 +9,7 @@
 # BSD 3-Clause "New" or "Revised" License                   #
 #############################################################
 
+import numpy as np
 import pytest
 
 import PythonPDBStructures.geometry as geometry
@@ -26,10 +27,11 @@ class Testget_center_of_mass():
         test_weights = {'C': 2. / 3., 'He': 1. / 3.}
 
         class Atom(object):
-            def __init__(self, element, coord):
+            def __init__(self, element, coord, name='DUM'):
 
                 self.element = element
                 self.coord = coord
+                self.name = name
 
         atom_1 = Atom('c', (-1., 0., 0.))
 
@@ -43,17 +45,19 @@ class Testget_center_of_mass():
 
         output_COM = geometry.get_center_of_mass(molecule, geometric)
 
-        assert output_COM == expected_COM
+        assert np.testing.assert_allclose(output_COM,
+                                          np.array(expected_COM)) is None
 
     def test_raises(self, mocker):
 
         test_weights = {}
 
         class Atom(object):
-            def __init__(self, element, coord):
+            def __init__(self, element, coord, name='DUM'):
 
                 self.element = element
                 self.coord = coord
+                self.name = name
 
         atom_1 = Atom('c', (-1., 0., 0.))
 
@@ -73,10 +77,11 @@ class Testget_center_of_mass():
         test_weights = {'C': 2. / 3., 'He': 1. / 3.}
 
         class Atom(object):
-            def __init__(self, element, coord):
+            def __init__(self, element, coord, name='DUM'):
 
                 self.element = element
                 self.coord = coord
+                self.name = name
 
         atom_1 = Atom('c', (-1., 0., 0.))
 
@@ -102,4 +107,26 @@ class Testget_center_of_mass():
 
         output_COM = geometry.get_center_of_mass(molecule, False)
 
-        assert output_COM == (-1. / 3., 0., 0.)
+        assert np.testing.assert_allclose(output_COM,
+                                          np.array((-1. / 3., 0., 0.))) is None
+
+    def test_backup_name(self):
+        class Atom(object):
+            def __init__(self, element, coord, name):
+
+                self.element = element
+                self.coord = coord
+                self.name = name
+
+        atom_1 = Atom('Does_not_Exist', (-1., 0., 0.),
+                      '13132132beeeeeeerfferferf3235525')  #Be
+
+        atom_2 = Atom('Does_not_Exist', (1., 0., 0.),
+                      '13132132beeeeeeerfferferf3235525')  #Be
+
+        molecule = (atom_1, atom_2)
+
+        output_COM = geometry.get_center_of_mass(molecule, False)
+
+        assert np.testing.assert_allclose(output_COM, np.array(
+            (0., 0., 0.))) is None

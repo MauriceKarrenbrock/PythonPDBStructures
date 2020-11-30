@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=too-many-branches
 #############################################################
 # Copyright (c) 2020-2020 Maurice Karrenbrock               #
 #                                                           #
@@ -12,6 +13,7 @@ mass COM of a protein structure
 """
 
 import Bio.PDB
+import numpy as np
 
 import PythonPDBStructures.important_lists
 
@@ -39,8 +41,8 @@ def get_center_of_mass(structure, geometric=False):
 
     Returns
     ----------
-    tuple
-        (x, y, z) x, y, z are float
+    numpy.array
+        [x, y, z] x, y, z are float
     """
 
     atom_weights = PythonPDBStructures.important_lists.atom_weights
@@ -62,8 +64,19 @@ def get_center_of_mass(structure, geometric=False):
 
     for atom in atom_list:
 
+        #some times atom element fails with strange atom names
+        #So I create a "backup name" by removing numbers from atom.name
+        #capitalizing it and taking the first 2 chars
+        backup_name = ''.join(i for i in atom.name if not i.isdigit())
+        backup_name = backup_name.capitalize()
+        if len(backup_name) > 2:
+            backup_name = backup_name[0:2]
+
         if atom.element.capitalize() in atom_weights.keys():
             atom.mass = atom_weights[atom.element.capitalize()]
+
+        elif backup_name in atom_weights.keys():
+            atom.mass = atom_weights[backup_name]
 
         else:
             atom.mass = 'ukn'
@@ -90,7 +103,7 @@ def get_center_of_mass(structure, geometric=False):
             w_pos[2].append(positions[2][atom_index] * atom_mass)
         com = [sum(coord_list) / sum(masses) for coord_list in w_pos]
 
-    #for safety, so you won't change the COM by accident
-    com = tuple(com)
+    #make it a numpy array
+    com = np.array(com)
 
     return com
