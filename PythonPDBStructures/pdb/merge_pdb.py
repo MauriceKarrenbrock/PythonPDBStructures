@@ -7,7 +7,7 @@
 #############################################################
 """
 This file contains the functions to merge PDB or mmCIF
-They are useful wen you need to merge one or more organic ligands with a protein
+They are useful when you need to merge one or more organic ligands with a protein
 """
 
 from PythonAuxiliaryFunctions.files_IO import read_file, write_file
