@@ -8,6 +8,8 @@
 # BSD 3-Clause "New" or "Revised" License                   #
 #############################################################
 """Here will be stored important lists, dictionaries etc
+
+many of the lists are actually tuples to avoid unwanted runtime modifications
 """
 
 #The periodic table with atom weights dictionary
@@ -124,3 +126,18 @@ atom_weights = {
     'Hs': 269.13,
     'Mt': 268.14,
 }
+
+#This tuple contains metal ions and some other ions that can be found in pdb structures
+metals = ('AL', 'BA', 'CA', 'CD', 'CL', 'CO', 'CS', 'CU', 'CU1', 'CUA', 'HG',
+          'IN', 'IOD', 'K', 'MG', 'MN3', 'NA', 'PB', 'PT', 'RB', 'TB', 'TL',
+          'WO4', 'YB', 'ZN', 'CAL', 'CES', 'CLA', 'POT', 'SOD', 'ZN2', 'FE',
+          'FE2', 'MN', 'NI', 'LI', 'Y', 'U')
+
+#contains the trash ligands that may be contained in a pdb file
+trash = ('PR', 'SO4', 'SF4', 'TRS', 'DMS', 'GLC', 'PO4', 'MBO', 'GOL', 'EDO',
+         'LYS', 'GLU', 'ACY', 'NAG'
+         'ALA', 'PHE', 'PEG', 'ACT', 'LEU', 'FMT'
+         'BU3', 'TYR', 'CYS', 'ASN', 'CSO', 'CSD', 'HOH')
+
+# Contains the trash metal ions that sometimes need to be removed
+trash_ions = ('IOD', 'K', 'NA', 'CL', 'LI', 'CA')

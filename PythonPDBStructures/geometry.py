@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=too-many-branches
+# pylint: disable=too-many-locals
 #############################################################
 # Copyright (c) 2020-2020 Maurice Karrenbrock               #
 #                                                           #
@@ -15,7 +16,7 @@ mass COM of a protein structure
 import Bio.PDB
 import numpy as np
 
-import PythonPDBStructures.important_lists
+import PythonPDBStructures.important_lists as important_lists
 
 
 def get_center_of_mass(structure, geometric=False):
@@ -45,7 +46,7 @@ def get_center_of_mass(structure, geometric=False):
         [x, y, z] x, y, z are float
     """
 
-    atom_weights = PythonPDBStructures.important_lists.atom_weights
+    atom_weights = important_lists.atom_weights
 
     # Structure, Model, Chain, Residue
     if isinstance(structure, Bio.PDB.Entity.Entity):
@@ -62,6 +63,7 @@ def get_center_of_mass(structure, geometric=False):
                  []]  # [ [X1, X2, ..] , [Y1, Y2, ...] , [Z1, Z2, ...] ]
     masses = []
 
+    unknown = []
     for atom in atom_list:
 
         #some times atom element fails with strange atom names
@@ -81,6 +83,8 @@ def get_center_of_mass(structure, geometric=False):
         else:
             atom.mass = 'ukn'
 
+            unknown.append(atom)
+
         masses.append(atom.mass)
 
         for i in range(len(atom.coord)):
@@ -90,7 +94,7 @@ def get_center_of_mass(structure, geometric=False):
     if 'ukn' in set(masses) and not geometric:
         raise ValueError("Some Atoms don't have an element assigned.\n" +
                          'Try adding them manually or calculate the ' +
-                         'geometrical center of mass instead.')
+                         f'geometrical center of mass instead.\n{unknown}')
 
     if geometric:
         com = [sum(coord_list) / len(masses) for coord_list in positions]
@@ -107,3 +111,238 @@ def get_center_of_mass(structure, geometric=False):
     com = np.array(com)
 
     return com
+
+
+def get_nearest_neighbors_residues(structure,
+                                   *,
+                                   target_resnum=None,
+                                   target_resname=None,
+                                   ignore_resnums=None,
+                                   ignore_resnames=None,
+                                   cutoff_angstom=4.5,
+                                   ignore_hetatms=False):
+    """get the nearest reighboring residues
+
+    starting from a biopython structure it gives you the
+    residues that have at least one atom that had a distance lower or equal to
+    `cutoff_angstom` from at least one atom of the target residue
+
+    Parameters
+    -------------
+    structure : biopython structure
+        the structure parsed from a pdb or mmcif file via biopython
+    target_resnum : int, optional
+        the residue number of the residue from which you want the nearest
+        neighbors, it is suggested to give `target_resnum` as input
+        instead of `target_resname`, if `target_resnum` is given `target_resname`
+        is ignored
+    target_resname : str, optional
+        the residue name of the residue from which you want the nearest
+        neighbors, it is suggested to give `target_resnum` as input
+        instead of `target_resname`, if `target_resnum` is given `target_resname`
+        is ignored
+    ignore_resnums : list(int), optional, default=[]
+        a list of residue numbers you don't want to include as possible nearest neighbors
+    ignore_resnames : list(str), optional,
+    default=important_lists.metals + important_lists.trash + ['HOH', 'SOL']
+        a list of residue names you don't want to include as possible nearest neighbors,
+        NOT case sensitive
+    cutoff_angstom : float, optional, default=4.5
+        the cutoff to decide if an atom is a neighbor or not, in angstrom
+    ignore_hetatms : bool, optional, default=False
+        if True will ignore any hetero atom in the PDB (also solvent)
+
+    Returns
+    ----------
+    NearestNeighborsAtoms
+        a class that contains information about the nearest residues' residue names and numbers
+        NearestNeighborsAtoms.resnames : list(str)
+            the residue names
+        NearestNeighborsAtoms.resnumbers : list(int)
+            the residue numbers
+        the order is consistent
+
+    Raises
+    ------------
+    ValueError
+        if both `target_resname` and `target_resnum` are not given as input
+    RuntimeError
+        if the target residue is missing
+
+    Notes
+    -----------
+    If you give `target_resname` and there are more than one residue with this name
+    results are unpredictable
+    """
+
+    # output class
+    class NearestNeighborsAtoms(object):
+        """nearest neighbours class
+        """
+        def __init__(self):
+
+            self.resnames = []
+
+            self.resnumbers = []
+
+        def add(self, resname, resnumber):
+            """add a residue
+            """
+
+            self.resnames.append(resname)
+
+            self.resnumbers.append(resnumber)
+
+    if ignore_resnums is None:
+
+        ignore_resnums = []
+
+    if ignore_resnames is None:
+
+        ignore_resnames = list(important_lists.metals) +\
+             list(important_lists.trash) + ['HOH', 'SOL']
+
+    if target_resnum is not None:
+
+        # to be sure I have a list
+        ignore_resnums = list(ignore_resnums)
+
+        ignore_resnums.append(target_resnum)
+
+        check = [target_resnum]
+
+    elif target_resname is not None:
+
+        # in order to deal with possible case issues
+        check = [
+            target_resname,
+            target_resname.upper(),
+            target_resname.lower(),
+            target_resname.capitalize()
+        ]
+
+        # to be sure I have a list
+        ignore_resnames = list(ignore_resnames)
+
+        ignore_resnames += check
+
+    else:
+
+        raise ValueError('You must  give a target_resname or a target_resnum')
+
+    #------------------------------------------------------
+    #a helper function
+    def is_valid_residue(residue):
+        """helper function
+
+        needed to check if the given residue shall be checked
+
+        Returns
+        ------------
+        bool
+        """
+        valid = True
+
+        #all this things make it false
+        if residue.id[1] in ignore_resnums:
+            valid = False
+
+        elif residue.resname.strip() in ignore_resnames:
+            valid = False
+
+        elif ignore_hetatms:
+            if residue.id[0].strip() != '':
+                valid = False
+
+        return valid
+
+    #------------------------------------------------------
+
+    # get target residue
+    for residue in structure.get_residues():
+
+        if residue.id[1] in check or residue.resname.strip() in check:
+
+            target_residue = residue
+
+            break
+
+    else:
+
+        raise RuntimeError(f'The target residue is missing, {check}')
+
+    nearest_neighbors = NearestNeighborsAtoms()
+
+    #for each residue in the system scan if it has
+    #at least 1 atom nearer as the treshold
+    #to one atom of the target residue
+    for residue in structure.get_residues():
+
+        if is_valid_residue(residue):
+
+            is_neighbor = False
+
+            for atom in residue:
+
+                for target_atom in target_residue:
+
+                    distance = atom.coord - target_atom.coord
+
+                    distance = distance**2
+
+                    distance = np.sum(distance)
+
+                    distance = distance**0.5
+
+                    if distance <= cutoff_angstom:
+
+                        nearest_neighbors.add(resname=residue.resname.strip(),
+                                              resnumber=residue.id[1])
+
+                        is_neighbor = True
+
+                        break
+
+                if is_neighbor:
+
+                    break
+
+    return nearest_neighbors
+
+
+def get_atom_numbers(structure):
+    """get a list of atom numbers composing a biopython structure
+
+    it gives you the atom numbers from the atoms composing the given
+    biopython structure
+
+    Parameters
+    ------------
+    structure : bioopython structure or list of atoms
+
+    Returns
+    -----------
+    list(int)
+        the list of all the atom numbers composing the structure
+
+    Notes
+    ------------
+    useful when definig an area of the structure (like an alchemical region)
+    with atom indexes (atom numbers)
+    """
+
+    atom_numbers = []
+
+    if hasattr(structure, 'get_atoms'):
+
+        atoms = structure.get_atoms()
+
+    else:  # list of atoms
+
+        atoms = structure
+
+    for atom in atoms:
+
+        atom_numbers.append(atom.get_serial_number())
+
+    return atom_numbers

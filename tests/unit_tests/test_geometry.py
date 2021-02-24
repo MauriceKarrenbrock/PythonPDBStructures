@@ -130,3 +130,143 @@ class Testget_center_of_mass():
 
         assert np.testing.assert_allclose(output_COM, np.array(
             (0., 0., 0.))) is None
+
+
+class Testget_nearest_neighbors_residues():
+    def test_works_resnum(self):
+        class Atom(object):
+            def __init__(self, element, coord, name='atom'):
+
+                self.element = element
+                self.coord = coord
+                self.name = name
+
+        class Residue(object):
+            def __init__(self, atom_list, resnum, resname='RES'):
+
+                self.atom_list = atom_list
+
+                self.id = ['', resnum]
+
+                self.resname = resname
+
+            def get_atoms(self):
+
+                return self.atom_list
+
+            def __iter__(self):
+
+                return self.atom_list.__iter__()
+
+        class Structure(object):
+            def __init__(self, residue_list):
+
+                self.residue_list = residue_list
+
+            def get_residues(self):
+
+                return self.residue_list
+
+        atom_1 = Atom('c', np.array([-1., 0., 0.]))
+
+        atom_2 = Atom('he', np.array([1., 0., 0.]))
+
+        atom_3 = Atom('he', np.array([10., 10., 10.]))
+
+        residue_near = Residue([atom_1, atom_3], 1, '1')
+
+        residue_far = Residue([atom_3, atom_3], 2, '2')
+
+        residue_ignore = Residue([atom_1, atom_3], 3, 'NO')
+
+        residue_target = Residue([atom_2, atom_2], 4, '4')
+
+        structure = Structure(
+            [residue_near, residue_far, residue_ignore, residue_target])
+
+        output = geometry.get_nearest_neighbors_residues(
+            structure,
+            target_resnum=4,
+            target_resname=None,
+            ignore_resnums=None,
+            ignore_resnames=['NO'],
+            cutoff_angstom=4.5,
+            ignore_hetatms=False)
+
+        assert output.resnames == ['1']
+
+        assert output.resnumbers == [1]
+
+
+class Testget_atom_numbers():
+    def test_works(self):
+        class Atom(object):
+            def __init__(self, element, coord, name='atom', seria_number=1):
+
+                self.element = element
+                self.coord = coord
+                self.name = name
+
+                self.seria_number = seria_number
+
+            def get_serial_number(self):
+
+                return self.seria_number
+
+        class Residue(object):
+            def __init__(self, atom_list, resnum, resname='RES'):
+
+                self.atom_list = atom_list
+
+                self.id = ['', resnum]
+
+                self.resname = resname
+
+            def get_atoms(self):
+
+                return self.atom_list
+
+            def __iter__(self):
+
+                return self.atom_list.__iter__()
+
+        class Structure(object):
+            def __init__(self, residue_list):
+
+                self.residue_list = residue_list
+
+            def get_residues(self):
+
+                return self.residue_list
+
+            def get_atoms(self):
+
+                atoms = []
+
+                for i in self.residue_list:
+
+                    atoms += i.get_atoms()
+
+                return atoms
+
+        atom_1 = Atom('c', np.array([-1., 0., 0.]), seria_number=1)
+
+        atom_2 = Atom('he', np.array([1., 0., 0.]), seria_number=2)
+
+        atom_3 = Atom('he', np.array([10., 10., 10.]), seria_number=3)
+
+        residue_1 = Residue([atom_1, atom_3], 1, '1')
+
+        residue_2 = Residue([atom_3, atom_3], 2, '2')
+
+        residue_3 = Residue([atom_1, atom_3], 3, 'NO')
+
+        residue_4 = Residue([atom_2, atom_2], 4, '4')
+
+        structure = Structure([residue_1, residue_2, residue_3, residue_4])
+
+        expected_output = [1, 3, 3, 3, 1, 3, 2, 2]
+
+        output = geometry.get_atom_numbers(structure)
+
+        assert output == expected_output
