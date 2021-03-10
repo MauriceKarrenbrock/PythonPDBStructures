@@ -9,6 +9,8 @@
 # BSD 3-Clause "New" or "Revised" License                   #
 #############################################################
 
+from unittest import mock
+
 import numpy as np
 import pytest
 
@@ -132,7 +134,21 @@ class Testget_center_of_mass():
             (0., 0., 0.))) is None
 
 
-class Testget_nearest_neighbors_residues():
+class Testget_nearest_neighbors_residues_with_mdtraj():
+    def test_works_resnum(self, mocker):
+
+        traj = mock.MagicMock(name='trajectory')
+        traj.topology = mock.MagicMock(name='topology')
+
+        m_contacts = mocker.patch('mdtraj.compute_contacts')
+
+        geometry.get_nearest_neighbors_residues_with_mdtraj(
+            traj, target_resname='sss')
+
+        m_contacts.assert_called_once()
+
+
+class Testget_nearest_neighbors_residues_with_biopython():
     def test_works_resnum(self):
         class Atom(object):
             def __init__(self, element, coord, name='atom'):
@@ -184,7 +200,7 @@ class Testget_nearest_neighbors_residues():
         structure = Structure(
             [residue_near, residue_far, residue_ignore, residue_target])
 
-        output = geometry.get_nearest_neighbors_residues(
+        output = geometry.get_nearest_neighbors_residues_with_biopython(
             structure,
             target_resnum=4,
             target_resname=None,

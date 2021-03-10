@@ -16,13 +16,36 @@ except ImportError:
 
 import warnings
 
+import mdtraj
+from simtk.openmm import unit
+
 import PythonPDBStructures.geometry as geometry
 import PythonPDBStructures.pdb.biopython_utils as bio
 
 from . import input_files
 
 
-class Testget_nearest_neighbors_residues():
+class Testget_nearest_neighbors_residues_with_mdtraj():
+    def test_works_resnum(self):
+
+        with resources.path(input_files, 'small_dummy.pdb') as pdb:
+
+            with warnings.catch_warnings():
+
+                warnings.simplefilter('ignore')
+
+                traj = mdtraj.load(str(pdb))
+
+        output = geometry.get_nearest_neighbors_residues_with_mdtraj(
+            traj,
+            target_resnum=2,
+            target_resname=None,
+            cutoff=0.45 * unit.nanometers)
+
+        assert output == [1]
+
+
+class Testget_nearest_neighbors_residues_with_biopython():
     def test_works_resnum(self):
 
         with resources.path(input_files, 'small_dummy.pdb') as pdb:
@@ -34,7 +57,7 @@ class Testget_nearest_neighbors_residues():
 
                 structure = bio.parse_pdb('aaaa', pdb.resolve())
 
-        output = geometry.get_nearest_neighbors_residues(
+        output = geometry.get_nearest_neighbors_residues_with_biopython(
             structure,
             target_resnum=1,
             target_resname=None,
