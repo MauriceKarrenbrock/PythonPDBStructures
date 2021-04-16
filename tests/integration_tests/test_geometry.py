@@ -37,12 +37,9 @@ class Testget_nearest_neighbors_residues_with_mdtraj():
                 traj = mdtraj.load(str(pdb))
 
         output = geometry.get_nearest_neighbors_residues_with_mdtraj(
-            traj,
-            target_resnum=2,
-            target_resname=None,
-            cutoff=0.45 * unit.nanometers)
+            traj, ligand_atoms='resSeq 2', cutoff=0.45 * unit.nanometers)
 
-        assert output == [1]
+        assert output == ([0], [1])
 
 
 class Testget_nearest_neighbors_residues_with_biopython():

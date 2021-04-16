@@ -13,6 +13,8 @@ There are functions to for example calculate the center of
 mass COM of a protein structure
 """
 
+import itertools
+
 import Bio.PDB
 import mdtraj
 import numpy as np
@@ -117,15 +119,15 @@ def get_center_of_mass(structure, geometric=False):
 
 def get_nearest_neighbors_residues_with_mdtraj(mdtraj_trajectory,
                                                *,
-                                               target_resnum=None,
-                                               target_resname=None,
-                                               cutoff=4.5 * unit.angstrom,
-                                               custom_selection=None):
+                                               ligand_atoms,
+                                               protein_atoms='protein',
+                                               cutoff=4.5 * unit.angstrom):
     """get the nearest reighboring residues
 
     starting from a mdtraj trajectory it gives you the
-    residues that have at least one atom that had a distance lower or equal to
-    `cutoff_angstom` from at least one atom of the target residue
+    residues 0 based index (resid) that have at least one atom that had
+    a distance lower or equal to
+    `cutoff_angstom` from at least one atom of the target `ligand_atoms`
 
     it will only consider the first frame in the trajectory!
 
@@ -134,34 +136,28 @@ def get_nearest_neighbors_residues_with_mdtraj(mdtraj_trajectory,
     Parameters
     -------------
     mdtraj_trajectory : mdtraj trajectory
-    target_resnum : int, optional
-        the residue number of the residue (resSeq) (numbering starts from 1)
-        from which you want the nearest
-        neighbors, it is suggested to give `target_resnum` as input
-        instead of `target_resname`, if `target_resnum` is given `target_resname`
-        is ignored
-    target_resname : str, optional
-        the residue name of the residue from which you want the nearest
-        neighbors, it is suggested to give `target_resnum` as input
-        instead of `target_resname`, if `target_resnum` is given `target_resname`
-        is ignored
+    ligand_atoms : str or iterable if int
+        a mdtraj selection string or an iterable of 0 indexed atom
+        indexes that represent the part of the structure (ex: a residue)
+        from which you want to know the nearest neighbors
+    protein_atoms : str or iterable if int, default='protein'
+        a mdtraj selection string or an iterable of 0 indexed atom
+        indexes that represent which part of the structure shall be considered
+        when looking for the nearest neighbors to `ligand_atoms`, the default is
+        'protein'
     cutoff : openmm.unit.Quantity or float, optional, default=4.5 * unit.angstrom
         the cutoff to decide if an atom is a neighbor or not, if the input is not a
         openmm.unit.Quantity it will be considered in angstrom
-    custom_selection : str, optional, default=None
-        for default the nearest neighbours will be searched only in the 'protein'
-        mdtraj selection, if you give a mdtraj selection string the nearest neighbors
-        will be searched in that custom selection
 
     Returns
     ----------
-    list(int)
-        the list of residue numbers (resSeq) (1 indexed)
-
-    Raises
-    ------------
-    ValueError
-        if both `target_resname` and `target_resnum` are not given as input
+    nearest_neighbors, ligand_residues : list(int), list(int)
+        `nearest_neighbors` is the list of residue
+        numbers (resid) (0 indexed) that are
+        nearest neighbors to the `ligand_atoms` corresponding residues
+        not containing the ligand residue numbers
+        `ligand_residues` is the list of resid (0 indexed) of the residues
+        corresponding to `ligand_atoms`
 
     Notes
     -----------
@@ -175,13 +171,14 @@ def get_nearest_neighbors_residues_with_mdtraj(mdtraj_trajectory,
     ```
     import mdtraj
 
-    traj = mdtraj.load('../system_with_h.pdb')
+    traj = mdtraj.load('test.pdb')
 
-    nn = get_nearest_neighbors_residues_with_mdtraj(traj, target_resname='LIG')
+    nn, lig = get_nearest_neighbors_residues_with_mdtraj(traj, ligand_atoms='resname LIG')
 
     nn = [0, 5, ...]
+    lig = [7]
     ```
-
+    if you are using openmm
     ```
     top = mdtraj.Topology.from_openmm(openmm_topology)
     traj = mdtraj.Trajectory([openmm_positions / unit.nanometers], top)
@@ -199,29 +196,23 @@ def get_nearest_neighbors_residues_with_mdtraj(mdtraj_trajectory,
         # from angstrom to nanometers
         cutoff /= 10.0
 
-    if target_resnum is not None:
+    if isinstance(ligand_atoms, str):
 
-        #from 1 indexed resseq to 0 indexed index
-        target_resnum -= 1
+        ligand_atoms = top.select(ligand_atoms)
 
-    elif target_resname is not None:
+    if isinstance(protein_atoms, str):
 
-        target_resnum = top.select(f'resname {target_resname}')
-        target_resnum = top.atom(target_resnum[0]).residue.index
+        protein_atoms = top.select(protein_atoms)
 
-    else:
-
-        raise ValueError('You must  give a target_resname or a target_resnum')
-
-    if custom_selection is None:
-
-        custom_selection = 'protein'
-
-    protein_atoms = top.select(custom_selection)
-
+    ligand_res = list(set(top.atom(i).residue.index for i in ligand_atoms))
     protein_res = list(set(top.atom(i).residue.index for i in protein_atoms))
 
-    pairs = [(target_resnum, i) for i in protein_res]
+    pairs = list(itertools.product(ligand_res, protein_res))
+
+    #save up some memory in case of huge proteins
+    del protein_res
+    del protein_atoms
+    del ligand_atoms
 
     contacts = mdtraj.compute_contacts(mdtraj_trajectory,
                                        contacts=pairs,
@@ -235,17 +226,19 @@ def get_nearest_neighbors_residues_with_mdtraj(mdtraj_trajectory,
 
             for i in residues:
 
-                #I am more interested in the pdb 1 based index
-                #than in the mdtraj 0 based index
-                interesting_residues.append(i + 1)
+                #mdtraj 0 indexed resid
+                interesting_residues.append(i)
 
     #remove possible duplicates
     #and remove possible contacts between the target and its self
     interesting_residues = set(interesting_residues)
-    interesting_residues.discard(target_resnum + 1)
+
+    for i in ligand_res:
+        interesting_residues.discard(i)
+
     interesting_residues = list(interesting_residues)
 
-    return interesting_residues
+    return interesting_residues, ligand_res
 
 
 def get_nearest_neighbors_residues_with_biopython(structure,

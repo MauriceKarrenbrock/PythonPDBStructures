@@ -142,8 +142,8 @@ class Testget_nearest_neighbors_residues_with_mdtraj():
 
         m_contacts = mocker.patch('mdtraj.compute_contacts')
 
-        geometry.get_nearest_neighbors_residues_with_mdtraj(
-            traj, target_resname='sss')
+        geometry.get_nearest_neighbors_residues_with_mdtraj(traj,
+                                                            ligand_atoms='sss')
 
         m_contacts.assert_called_once()
 
