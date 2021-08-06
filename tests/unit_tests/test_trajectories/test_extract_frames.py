@@ -3,6 +3,8 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
 # pylint: disable=no-self-use
+# pylint: disable=too-few-public-methods
+# pylint: disable=consider-using-from-import
 #############################################################
 # Copyright (c) 2020-2020 Maurice Karrenbrock               #
 #                                                           #
@@ -37,7 +39,7 @@ class Testextract_frames():
 
         atoms = MagicMock()
 
-        universe.select_atoms.return_value = atoms
+        universe.atoms = atoms
 
         universe.trajectory = test_trajectory
 

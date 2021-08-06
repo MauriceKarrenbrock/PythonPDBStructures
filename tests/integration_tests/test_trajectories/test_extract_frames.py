@@ -3,6 +3,8 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
 # pylint: disable=no-self-use
+# pylint: disable=too-few-public-methods
+# pylint: disable=consider-using-from-import
 #############################################################
 # Copyright (c) 2020-2020 Maurice Karrenbrock               #
 #                                                           #
@@ -43,6 +45,32 @@ class Testextract_frames():
             output_path / 'output4.pdb', output_path / 'output5.pdb',
             output_path / 'output6.pdb', output_path / 'output7.pdb'
         ])
+
+        assert read_file.read_file(output_path / 'output0.pdb')[1:] != \
+            read_file.read_file(output_path / 'output1.pdb')[1:]
+
+
+class Testextract_all_frames():
+    def test_works(self, tmp_path):
+
+        input_dir = Path('tests/integration_tests/input_files')
+
+        trajectory = input_dir / 'ch2cl2.trr'
+
+        topology = input_dir / 'ch2cl2.tpr'
+
+        output_path = tmp_path / 'ch2cl2_extract_frames'
+
+        output_path.mkdir()
+
+        output_file = output_path / 'output'
+
+        output = extract_frames.extract_all_frames(trajectory, topology,
+                                                   output_file, 'pdb')
+
+        assert output == 4001
+
+        assert len(list(output_path.iterdir())) == 4001
 
         assert read_file.read_file(output_path / 'output0.pdb')[1:] != \
             read_file.read_file(output_path / 'output1.pdb')[1:]
