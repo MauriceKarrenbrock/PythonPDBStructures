@@ -304,7 +304,7 @@ def get_nearest_neighbors_residues_with_biopython(structure,
     """
 
     # output class
-    class NearestNeighborsAtoms(object):
+    class NearestNeighborsAtoms(object): # pylint: disable=too-few-public-methods
         """nearest neighbours class
         """
         def __init__(self):
@@ -474,3 +474,60 @@ def get_atom_numbers(structure):
         atom_numbers.append(atom.get_serial_number())
 
     return atom_numbers
+
+
+def get_inertia_eigenvectors(trajectory, **kwargs):
+    """Calculate the right eigenvectors of the moment of inertia tensor
+
+    Parameters
+    ------------
+    trajectory : str or mdtraj.Trajecotry
+        something that is supported by mdtraj.load
+    kwargs optional
+        additional keyword arguments for mdtraj.load
+
+    Returns
+    ----------
+    numpy.array of size (3, 3)
+        the vectors are the columns (v[:i]) of the array
+
+    Notes
+    --------
+    if the trajectory has more frames only the first one will be taken
+    into consideration
+    """
+
+    traj = mdtraj.load(trajectory, **kwargs)
+    inertia_tensor = mdtraj.compute_inertia_tensor(traj)[0]
+    _, eigen_vectors = np.linalg.eig(inertia_tensor)
+
+    return eigen_vectors
+
+
+def rotate_coordinates(coordinates, rot_matrix, check_reflections=False):
+    """Rotates a set of coordinates according to a given rotation matrix
+
+    Can e useful to rotate a protein in it's intertia tensor reference system
+    in order to make a smaller solvation box, you can ge the rotation matrix
+    with the `get_inertia_eigenvectors` in this module and then invert it with `numpy.linalg.inv`
+
+    Parameters
+    -------------
+    coordinates : numpy.array of shape (num_atoms, 3)
+    rot_matrix : numpy.array of shape (3, 3)
+        the rotation matrix
+    check_reflections : bool, optional, default=False
+        if True it will check if the determinant of `rot_matrix`<0
+        and in case will do rot_matrix[:,2] = - rot_matrix[:,2]
+        in order not to mess up chiral chenters
+
+    Returns
+    --------
+    rotated_coordinates : numpy.array of shape (num_atoms, 3)
+    """
+
+    if check_reflections:
+        if np.linalg.det(rot_matrix) < 0:
+            rot_matrix[:, 2] = -rot_matrix[:, 2]
+
+    return (rot_matrix @ coordinates.T).T

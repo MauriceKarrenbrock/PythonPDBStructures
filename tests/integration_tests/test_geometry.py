@@ -2,6 +2,7 @@
 # pylint: disable=missing-docstring
 # pylint: disable=redefined-outer-name
 # pylint: disable=no-self-use
+# pylint: disable=too-few-public-methods
 #############################################################
 # Copyright (c) 2020-2020 Maurice Karrenbrock               #
 #                                                           #
@@ -17,6 +18,7 @@ except ImportError:
 import warnings
 
 import mdtraj
+import numpy as np
 from simtk.openmm import unit
 
 import PythonPDBStructures.geometry as geometry
@@ -85,3 +87,40 @@ class Testget_atom_numbers():
         output = geometry.get_atom_numbers(structure)
 
         assert output == expected_output
+
+
+class Testget_inertia_eigenvectors():
+    def test_protein_already_in_frame(self):
+        with resources.path(input_files,
+                            '5rgs_inertia_tensor_frame.pdb') as pdb:
+
+            output_eigenvectors = geometry.get_inertia_eigenvectors(str(pdb))
+
+            # get rotation matrix
+            output_eigenvectors = np.linalg.inv(output_eigenvectors)
+
+            # to remove some possible negative values (annoying for testing)
+            output_eigenvectors = np.abs(output_eigenvectors)
+
+            expected_eigenvectors = np.array([[1., 0., 0.], [0., 1., 0.],
+                                              [0., 0., 1.]])
+
+            assert np.testing.assert_allclose(output_eigenvectors,
+                                              expected_eigenvectors,
+                                              atol=1.5e-06) is None
+
+
+class Testget_rotate_coordinates():
+    def test_protein_already_in_frame(self):
+        with resources.path(input_files,
+                            '5rgs_inertia_tensor_frame.pdb') as pdb:
+
+            traj = mdtraj.load(str(pdb))
+
+            identity = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
+
+            output_xyz = geometry.rotate_coordinates(coordinates=traj.xyz[0],
+                                                     rot_matrix=identity,
+                                                     check_reflections=False)
+
+            assert np.testing.assert_allclose(output_xyz, traj.xyz[0]) is None
