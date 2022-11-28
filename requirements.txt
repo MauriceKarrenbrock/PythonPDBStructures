@@ -1,5 +1,7 @@
+git+https://github.com/MauriceKarrenbrock/PythonAuxiliaryFunctions.git # PythonAuxiliaryFunctions
+git+https://github.com/prody/ProDy.git # Prody
 biopython
-git+https://github.com/MauriceKarrenbrock/PythonAuxiliaryFunctions.git #PythonAuxiliaryFunctions
-git+https://github.com/prody/ProDy.git #prody
-MDAnalysis
-
+MDAnalysis>=1.1.1
+mdtraj
+numpy
+openmm

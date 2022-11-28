@@ -1,0 +1,15 @@
+name: PythonPDBStructures 
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - numpy
+  - openmm
+  - pip
+  - mdtraj
+  - MDAnalysis>=1.1.1
+  - biopython
+  - pip:
+    - 'git+https://github.com/MauriceKarrenbrock/PythonAuxiliaryFunctions.git'
+    - 'git+https://github.com/prody/ProDy.git'
