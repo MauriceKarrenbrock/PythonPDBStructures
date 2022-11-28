@@ -24,7 +24,7 @@ import PythonPDBStructures.important_lists as important_lists
 
 
 def get_center_of_mass(structure, geometric=False):
-    """calculate center of mass of a biopython structure
+    """Calculate center of mass of a biopython structure
 
     Given a biopython structure (protein, chain)
     or an iterable of atoms (object with element and
@@ -46,8 +46,8 @@ def get_center_of_mass(structure, geometric=False):
 
     Returns
     ----------
-    numpy.array
-        [x, y, z] x, y, z are float
+    numpy.array(float)
+        [x, y, z] where x, y, z are float
     """
 
     atom_weights = important_lists.atom_weights
@@ -122,7 +122,7 @@ def get_nearest_neighbors_residues_with_mdtraj(mdtraj_trajectory,
                                                ligand_atoms,
                                                protein_atoms='protein',
                                                cutoff=4.5 * unit.angstrom):
-    """get the nearest reighboring residues
+    """Get the nearest reighboring residues
 
     starting from a mdtraj trajectory it gives you the
     residues 0 based index (resid) that have at least one atom that had
@@ -140,7 +140,7 @@ def get_nearest_neighbors_residues_with_mdtraj(mdtraj_trajectory,
         a mdtraj selection string or an iterable of 0 indexed atom
         indexes that represent the part of the structure (ex: a residue)
         from which you want to know the nearest neighbors
-    protein_atoms : str or iterable if int, default='protein'
+    protein_atoms : str or iterable if int, default=protein
         a mdtraj selection string or an iterable of 0 indexed atom
         indexes that represent which part of the structure shall be considered
         when looking for the nearest neighbors to `ligand_atoms`, the default is
@@ -168,21 +168,18 @@ def get_nearest_neighbors_residues_with_mdtraj(mdtraj_trajectory,
 
     Examples
     --------------
-    ```
-    import mdtraj
 
-    traj = mdtraj.load('test.pdb')
-
-    nn, lig = get_nearest_neighbors_residues_with_mdtraj(traj, ligand_atoms='resname LIG')
-
+    >>> import mdtraj
+    >>> traj = mdtraj.load('test.pdb')
+    >>> nn, lig = get_nearest_neighbors_residues_with_mdtraj(traj, ligand_atoms='resname LIG')
     nn = [0, 5, ...]
     lig = [7]
-    ```
+
     if you are using openmm
-    ```
-    top = mdtraj.Topology.from_openmm(openmm_topology)
-    traj = mdtraj.Trajectory([openmm_positions / unit.nanometers], top)
-    ```
+
+    >>> top = mdtraj.Topology.from_openmm(openmm_topology)
+    >>> traj = mdtraj.Trajectory([openmm_positions / unit.nanometers], top)
+
     """
 
     top = mdtraj_trajectory.topology
@@ -249,7 +246,7 @@ def get_nearest_neighbors_residues_with_biopython(structure,
                                                   ignore_resnames=None,
                                                   cutoff_angstom=4.5,
                                                   ignore_hetatms=False):
-    """get the nearest reighboring residues
+    """Get the nearest reighboring residues
 
     starting from a biopython structure it gives you the
     residues that have at least one atom that had a distance lower or equal to
@@ -284,10 +281,8 @@ def get_nearest_neighbors_residues_with_biopython(structure,
     ----------
     NearestNeighborsAtoms
         a class that contains information about the nearest residues' residue names and numbers
-        NearestNeighborsAtoms.resnames : list(str)
-            the residue names
-        NearestNeighborsAtoms.resnumbers : list(int)
-            the residue numbers
+        NearestNeighborsAtoms.resnames : list(str) the residue names
+        NearestNeighborsAtoms.resnumbers : list(int) the residue numbers
         the order is consistent
 
     Raises
@@ -439,7 +434,7 @@ def get_nearest_neighbors_residues_with_biopython(structure,
 
 
 def get_atom_numbers(structure):
-    """get a list of atom numbers composing a biopython structure
+    """Get a list of atom numbers composing a biopython structure
 
     it gives you the atom numbers from the atoms composing the given
     biopython structure
@@ -517,7 +512,7 @@ def rotate_coordinates(coordinates, rot_matrix, check_reflections=False):
     rot_matrix : numpy.array of shape (3, 3)
         the rotation matrix
     check_reflections : bool, optional, default=False
-        if True it will check if the determinant of `rot_matrix`<0
+        if True it will check if the determinant of `rot_matrix` < 0
         and in case will do rot_matrix[:,2] = - rot_matrix[:,2]
         in order not to mess up chiral chenters
 
