@@ -10,6 +10,8 @@ dependencies:
   - mdtraj
   - MDAnalysis>=1.1.1
   - biopython
+  - pytest
+  - pytest-mock
   - pip:
     - 'git+https://github.com/MauriceKarrenbrock/PythonAuxiliaryFunctions.git'
     - 'git+https://github.com/prody/ProDy.git'
